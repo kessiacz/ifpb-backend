@@ -19,7 +19,7 @@ header h2 { font-size: 2rem; font-family: 'Poppins'; font-weight: 600; color: #F
 .toggle input:checked + .label { background-color: #F9F9F9; }
 .toggle input:checked + .label .box { transform: translateX(2.9rem); background-color: #13131F; }
 
-/* MENU LATERAL (VERTICAL) */
+/* MENU LATERAL */
 .menuOpen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(19, 19, 31, 0.98); backdrop-filter: blur(10px); z-index: 2000; display: flex; justify-content: center; align-items: center; }
 .menu-content { display: flex; flex-direction: column; align-items: center; }
 .menuOpen h2 { font-size: 2.4rem; color: #8257E6; margin-bottom: 5rem; font-family: 'Poppins'; }
@@ -32,40 +32,37 @@ header h2 { font-size: 2rem; font-family: 'Poppins'; font-weight: 600; color: #F
 .page-title { text-align: center; margin: 6rem 0 4rem; }
 .page-title h2 { font-size: 3.2rem; font-family: 'Poppins'; text-transform: uppercase; line-height: 1.2; }
 .container-exercicios { width: 90%; max-width: 800px; margin: 0 auto 10rem; }
-details { background-color: #1c1c2d; border-radius: 1.5rem; margin-bottom: 2rem; border: 1px solid #2a2a40; transition: 0.3s; }
-summary { padding: 2.5rem; cursor: pointer; font-size: 1.8rem; font-weight: 600; display: flex; justify-content: space-between; outline: none; color: #F9F9F9;}
-summary::after { content: '+'; color: #8257E6; font-size: 2.2rem; }
-details[open] summary::after { content: '-'; }
-.content { padding: 0 2.5rem 2.5rem; font-size: 1.6rem; color: #828282; line-height: 1.8; }
+
+/* BOX ESTÁTICA (Substituindo o Details) */
+.terminal-wrapper { background-color: #1c1c2d; border-radius: 1.5rem; margin-bottom: 2rem; border: 1px solid #2a2a40; overflow: hidden; }
+.terminal-title { padding: 2.5rem; font-size: 1.8rem; font-weight: 600; color: #F9F9F9; border-bottom: 1px solid #2a2a40; text-transform: uppercase; }
+.content { padding: 2.5rem; font-size: 1.6rem; color: #828282; line-height: 1.8; }
+
+/* ESTILIZAÇÃO DA IDE / TERMINAL */
+.terminal-ide-container { background-color: #0d0d15; border-radius: 1.2rem; border: 0.1rem solid #2a2a40; margin-top: 2rem; overflow: hidden; }
+.terminal-ide-header { background-color: #1c1c2d; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.1rem solid #2a2a40; }
+
+/* BOTÃO RUN (Mais comprido e border-radius total) */
+#btnRunTerminal { background: #8257E6; color: #F9F9F9; border: none; padding: 0.8rem 4.5rem; border-radius: 5rem; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Poppins'; text-transform: uppercase; letter-spacing: 0.5px; }
+#btnRunTerminal:hover { background: #9466ff; transform: scale(1.03); }
+
+/* DOTS ESTILO MAC */
+.dots { display: flex; gap: 0.8rem; }
+.dots span { width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #ff5f56; }
+.dots span:nth-child(2) { background: #ffbd2e; }
+.dots span:nth-child(3) { background: #27c93f; }
+
+/* TERMINAL XTERM */
+#terminal-container { padding: 1.5rem; background: #000; min-height: 300px; }
 
 /* LIGHT MODE */
 body.light-mode { background-color: #F9F9F9; color: #13131F; }
 body.light-mode header h2 { color: #8257E6; }
 body.light-mode header { background-color: #13131F; }
-body.light-mode .banner h1, body.light-mode .banner p, body.light-mode h2 { color: #13131F; }
-body.light-mode .folder-card { background-color: #EEEEEE; border: 0.1rem solid #DDD; }
-body.light-mode .icon .box { background-color: #EEEEEE; }
+body.light-mode .terminal-wrapper { background-color: #EEEEEE; border: 0.1rem solid #DDD; }
+body.light-mode .terminal-title, body.light-mode h2 { color: #13131F; }
 
-/* ESTILIZAÇÃO DO SCROLLBAR */
+/* SCROLLBARS */
 ::-webkit-scrollbar { width: 1rem; }
 ::-webkit-scrollbar-track { background-color: #13131F; }
 ::-webkit-scrollbar-thumb { background-color: #8257E6; border-radius: 1rem; border: 0.2rem solid #13131F; }
-::-webkit-scrollbar-thumb:hover { background-color: #9466ff; }
-
-/* SUPORTE FIREFOX */
-* { scrollbar-width: thin; scrollbar-color: #8257E6 #13131F; }
-body.light-mode { scrollbar-color: #8257E6 #F9F9F9; }
-
-/* ESTILIZAÇÃO DO COMPILADOR */
-.terminal-container { background-color: #0d0d15; border-radius: 0.8rem; border: 0.1rem solid #2a2a40; margin-top: 2rem; overflow: hidden; }
-.terminal-header { background-color: #1c1c2d; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.1rem solid #2a2a40; }
-.terminal-header span { color: #8257E6; font-family: 'Poppins'; font-size: 1.4rem; font-weight: 600; }
-#pythonCode { width: 100%; height: 250px; background: #13131F; color: #F9F9F9; border: none; padding: 1.5rem; font-family: monospace; resize: vertical; outline: none; line-height: 1.5; }
-#pythonOutput { padding: 1.5rem; color: #00ff00; font-family: monospace; font-size: 1.3rem; border-top: 0.1rem solid #2a2a40; background: #0a0a0f; min-height: 100px; white-space: pre-wrap; }
-#btnRunPython { background: #8257E6; color: #F9F9F9; border: none; padding: 0.6rem 1.5rem; border-radius: 0.4rem; cursor: pointer; font-weight: bold; transition: 0.3s; font-family: 'Poppins'; }
-#btnRunPython:hover { background: #9466ff; transform: scale(1.05); }
-
-/* AJUSTE SCROLLBAR TERMINAL */
-#pythonCode::-webkit-scrollbar { width: 0.8rem; }
-#pythonCode::-webkit-scrollbar-track { background: #13131F; }
-#pythonCode::-webkit-scrollbar-thumb { background: #8257E6; border-radius: 1rem; }
