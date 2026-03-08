@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mostrar_editais = (lista) => {
             if (!lista || lista.length === 0) {
-                term.writeln("\r\nNenhum edital encontrado para este ano.");
+                term.writeln("\r\nNenhum edital encontrado. Tente outro ano ou categoria.");
                 return;
             }
             lista.forEach(e => {
@@ -85,16 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('btnRunTerminal').addEventListener('click', async () => {
             term.clear();
-            const backendUrl = "https://ifpb-backend.onrender.com";
+            // Verifique se este link está EXATAMENTE igual ao do seu dashboard no Render
+            const backendUrl = "https://ifpb-backend.onrender.com"; 
 
             while (true) {
                 term.writeln("\r\n(0) Sair\r\n(1) Direcao Geral\r\n(2) Pesquisa\r\n(3) Extensao\r\n(4) Assistencia Estudantil\r\n(5) Ensino\r\n(6) Inovacao");
                 const op = await customInput("Escolha uma opcao: ");
                 if (op === "0") { term.writeln("Encerrado."); break; }
 
-                const anoStr = await customInput("Digite o ano desejado (ex: 2024): ");
+                let anoInput = await customInput("Digite o ano desejado (ex: 2024): ");
+                const anoStr = anoInput.trim(); 
+
                 if (!/^\d{4}$/.test(anoStr)) {
-                    term.writeln("\r\nAno invalido."); continue;
+                    term.writeln("\r\nAno invalido. Use o formato AAAA."); continue;
                 }
 
                 const categorias = {
@@ -108,17 +111,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 try {
-                    term.writeln(`\r\nBuscando em: ${categoria}/${anoStr}...`);
-                    // Chamada corrigida para bater com o server.js
-                    const res = await fetch(`${backendUrl}/editais/${categoria}/${anoStr}`);
+                    term.writeln(`\r\nConectando ao servidor...`);
+                    term.writeln(`Buscando editais de ${categoria} (${anoStr})...`);
                     
+                    // Adicionamos um timeout manual para o fetch não "desistir" antes do Render acordar
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 segundos
+
+                    const res = await fetch(`${backendUrl}/editais/${categoria}/${anoStr}`, {
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+
                     if (!res.ok) throw new Error();
                     const data = await res.json();
                     
                     mostrar_editais(data.editais);
                 } catch (err) {
                     term.writeln("\r\n[ERRO]: Nao foi possivel conectar ao servidor.");
-                    term.writeln("Certifique-se que o server.js esta rodando (Node.js).");
+                    term.writeln("DICA: O Render pode levar ate 1 minuto para ligar (Cold Start).");
+                    term.writeln("Tente novamente em instantes.");
+                    console.error("Erro na busca:", err);
                 }
             }
         });
