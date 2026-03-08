@@ -12,27 +12,27 @@ app.use(express.json());
 app.get("/editais/:categoria/:ano", async (req, res) => {
     const { categoria, ano } = req.params;
     
-    // Lista de tentativas na ordem correta
+    // Lista de prioridade: tenta o normal, se falhar, tenta o -1
     const urlsParaTestar = [
         `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`,
         `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`
     ];
 
-    let editais = [];
+    let editaisEncontrados = [];
 
     for (const url of urlsParaTestar) {
         try {
-            console.log(`Tentando conexão em: ${url}`);
+            console.log(`📡 Tentando buscar em: ${url}`);
+            
             const response = await axios.get(url, {
                 headers: { 'User-Agent': 'Mozilla/5.0' },
-                timeout: 7000 // Tempo para o IFPB responder
+                timeout: 10000 // Aumentamos para 10s porque o IFPB é lento
             });
 
             const dom = new JSDOM(response.data);
             const document = dom.window.document;
             const cards = document.querySelectorAll(".listing-item, .tileItem");
 
-            // Se encontrou algo, processa e para o loop
             if (cards.length > 0) {
                 cards.forEach(card => {
                     const linkTag = card.querySelector("a");
@@ -40,25 +40,27 @@ app.get("/editais/:categoria/:ano", async (req, res) => {
                     
                     if (linkTag && tituloTag) {
                         let href = linkTag.getAttribute("href");
-                        const linkCompleto = href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`;
-                        editais.push({
+                        editaisEncontrados.push({
                             nome: tituloTag.textContent.trim(),
-                            link: linkCompleto
+                            link: href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`
                         });
                     }
                 });
-                
-                console.log(` Sucesso em ${url}: ${editais.length} itens encontrados.`);
-                return res.json({ editais }); // Finaliza a rota enviando os dados
+
+                if (editaisEncontrados.length > 0) {
+                    console.log(`✅ Sucesso! Encontrados ${editaisEncontrados.length} editais em ${url}`);
+                    return res.json({ editais: editaisEncontrados }); // Retorna e sai da função
+                }
             }
         } catch (err) {
-            console.log(`URL falhou ou vazia (${url}). Tentando próxima...`);
-            // Se for a última URL da lista e falhou, o loop acaba naturalmente
+            // Aqui está o segredo: se der erro (404), ele apenas loga e CONTINUA o loop para a próxima URL
+            console.log(`⚠️ URL ${url} falhou (Erro: ${err.response ? err.response.status : err.message}). Tentando a próxima...`);
         }
     }
 
-    // Se chegou aqui, nenhuma URL funcionou
-    res.json({ editais: [], mensagem: "Nenhum edital encontrado em nenhuma das rotas." });
+    // Se saiu do loop e não retornou nada, é porque ambas falharam
+    console.log("❌ Nenhuma das URLs retornou resultados.");
+    res.json({ editais: [] });
 });
 
 app.listen(PORT, () => {
