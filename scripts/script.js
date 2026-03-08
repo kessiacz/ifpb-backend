@@ -27,8 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (menuBtn) menuBtn.addEventListener('click', openMenu);
     if (closeBtn) closeBtn.addEventListener('click', closeMenu);
-    menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
-    menuOverlay.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+    
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
+        menuOverlay.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+    }
 
     // --- Terminal e Backend ---
     (async () => {
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fontFamily: 'Courier New, monospace',
             fontSize: 14
         });
-        
+
         term.open(document.getElementById('terminal-container'));
         term.writeln("Terminal pronto. Clique em RUN.");
 
@@ -53,13 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         term.onData(e => {
             if (!resolveInput) return;
-            if (e === "\r") {
+            if (e === "\r") { // Enter
                 const data = inputBuffer;
                 inputBuffer = "";
                 term.write("\r\n");
                 resolveInput(data);
                 resolveInput = null;
-            } else if (e === "\u007f") {
+            } else if (e === "\u007f") { // Backspace
                 if (inputBuffer.length > 0) {
                     inputBuffer = inputBuffer.slice(0, -1);
                     term.write("\b \b");
@@ -83,58 +86,67 @@ document.addEventListener('DOMContentLoaded', () => {
             term.writeln("-".repeat(60));
         };
 
-        document.getElementById('btnRunTerminal').addEventListener('click', async () => {
-            term.clear();
-            // Verifique se este link está EXATAMENTE igual ao do seu dashboard no Render
-            const backendUrl = "https://ifpb-backend.onrender.com"; 
+        const btnRun = document.getElementById('btnRunTerminal');
+        if (btnRun) {
+            btnRun.addEventListener('click', async () => {
+                term.clear();
+                const backendUrl = "https://ifpb-backend.onrender.com";
 
-            while (true) {
-                term.writeln("\r\n(0) Sair\r\n(1) Direcao Geral\r\n(2) Pesquisa\r\n(3) Extensao\r\n(4) Assistencia Estudantil\r\n(5) Ensino\r\n(6) Inovacao");
-                const op = await customInput("Escolha uma opcao: ");
-                if (op === "0") { term.writeln("Encerrado."); break; }
-
-                let anoInput = await customInput("Digite o ano desejado (ex: 2024): ");
-                const anoStr = anoInput.trim(); 
-
-                if (!/^\d{4}$/.test(anoStr)) {
-                    term.writeln("\r\nAno invalido. Use o formato AAAA."); continue;
-                }
-
-                const categorias = {
-                    "1": "direcao-geral", "2": "pesquisa", "3": "extensao",
-                    "4": "assistencia-estudantil", "5": "ensino", "6": "inovacao"
-                };
-
-                const categoria = categorias[op];
-                if (!categoria) {
-                    term.writeln("\r\nOpcao invalida."); continue;
-                }
-
-                try {
-                    term.writeln(`\r\nConectando ao servidor...`);
-                    term.writeln(`Buscando editais de ${categoria} (${anoStr})...`);
+                while (true) {
+                    term.writeln("\r\n(0) Sair\r\n(1) Direcao Geral\r\n(2) Pesquisa\r\n(3) Extensao\r\n(4) Assistencia Estudantil\r\n(5) Ensino\r\n(6) Inovacao");
+                    const op = await customInput("Escolha uma opcao: ");
                     
-                    // Adicionamos um timeout manual para o fetch não "desistir" antes do Render acordar
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 segundos
+                    if (op === "0") { 
+                        term.writeln("Encerrado."); 
+                        break; 
+                    }
 
-                    const res = await fetch(`${backendUrl}/editais/${categoria}/${anoStr}`, {
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
+                    const anoInput = await customInput("Digite o ano desejado (ex: 2024): ");
+                    const anoStr = anoInput.trim();
 
-                    if (!res.ok) throw new Error();
-                    const data = await res.json();
-                    
-                    mostrar_editais(data.editais);
-                } catch (err) {
-                    term.writeln("\r\n[ERRO]: Nao foi possivel conectar ao servidor.");
-                    term.writeln("DICA: O Render pode levar ate 1 minuto para ligar (Cold Start).");
-                    term.writeln("Tente novamente em instantes.");
-                    console.error("Erro na busca:", err);
+                    if (!/^\d{4}$/.test(anoStr)) {
+                        term.writeln("\r\n[!] Ano invalido. Use o formato AAAA."); 
+                        continue;
+                    }
+
+                    const categorias = {
+                        "1": "direcao-geral", "2": "pesquisa", "3": "extensao",
+                        "4": "assistencia-estudantil", "5": "ensino", "6": "inovacao"
+                    };
+
+                    const categoria = categorias[op];
+                    if (!categoria) {
+                        term.writeln("\r\n[!] Opcao invalida."); 
+                        continue;
+                    }
+
+                    // Função interna para buscar os dados
+                    const buscar = async (anoParaBusca) => {
+                        term.writeln(`\r\nBuscando em: ${categoria}/${anoParaBusca}...`);
+                        const res = await fetch(`${backendUrl}/editais/${categoria}/${anoParaBusca}`);
+                        if (!res.ok) throw new Error("Falha na conexao");
+                        return await res.json();
+                    };
+
+                    try {
+                        // TENTATIVA 1: Ano normal
+                        let data = await buscar(anoStr);
+
+                        // TENTATIVA 2: Fallback para ano-1 se a primeira voltar vazia
+                        if (!data.editais || data.editais.length === 0) {
+                            term.writeln(`⚠️ Nenhum edital em ${anoStr}. Tentando no link alternativo (${anoStr}-1)...`);
+                            data = await buscar(`${anoStr}-1`);
+                        }
+
+                        mostrar_editais(data.editais);
+
+                    } catch (err) {
+                        term.writeln("\r\n[ERRO]: Nao foi possivel conectar ao servidor.");
+                        term.writeln("DICA: O Render pode levar ate 1 minuto para ligar (Cold Start).");
+                        term.writeln("Tente novamente em instantes.");
+                    }
                 }
-            }
-        });
+            });
+        }
     })();
 });
