@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mostrar_editais = (lista) => {
             if (!lista || lista.length === 0) {
-                term.writeln("\r\nNenhum edital encontrado. Tente outro ano ou categoria.");
+                term.writeln("\r\nNenhum edital encontrado.");
                 return;
             }
             lista.forEach(e => {
@@ -120,37 +120,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         continue;
                     }
 
-                    // Função interna para buscar os dados
-                    const buscar = async (anoParaBusca) => {
-                        term.writeln(`\r\nBuscando em: ${categoria}/${anoParaBusca}...`);
-                        const res = await fetch(`${backendUrl}/editais/${categoria}/${anoParaBusca}`);
-                        if (!res.ok) throw new Error("Falha na conexao");
-                        return await res.json();
+                    // Função para buscar editais do backend
+                    const buscarEditais = async (categoria, ano) => {
+                        const res = await fetch(`${backendUrl}/editais/${categoria}/${ano}`);
+                        if (!res.ok) throw new Error("Falha na conexao com o servidor");
+                        const data = await res.json();
+                        return data.editais || [];
                     };
 
                     try {
-                        let data;
-                        try {
-                            // TENTATIVA 1: Ano normal
-                            data = await buscar(anoStr);
-                        } catch (e) {
-                            // Se a primeira conexão falhou, não desistimos! 
-                            // Avisamos o usuário e tentamos o Plano B
-                            term.writeln("⚠️ Falha na primeira conexão. Tentando link alternativo diretamente...");
-                            data = await buscar(`${anoStr}-1`);
+                        // Tenta ano normal
+                        let editais = await buscarEditais(categoria, anoStr);
+
+                        // Se não encontrou, tenta ano-1
+                        if (!editais || editais.length === 0) {
+                            term.writeln(`Nenhum edital em ${anoStr}. Tentando ${anoStr}-1...`);
+                            editais = await buscarEditais(categoria, `${anoStr}-1`);
                         }
 
-                        // Se a conexão funcionou mas veio vazio, também tenta o Plano B
-                        if (!data.editais || data.editais.length === 0) {
-                            term.writeln(`⚠️ Nenhum edital em ${anoStr}. Tentando ${anoStr}-1...`);
-                            data = await buscar(`${anoStr}-1`);
+                        // Mostra resultado final
+                        if (!editais || editais.length === 0) {
+                            term.writeln(`Nenhum edital encontrado para ${anoStr} ou ${anoStr}-1`);
+                        } else {
+                            mostrar_editais(editais);
                         }
-
-                        mostrar_editais(data.editais);
 
                     } catch (err) {
-                        term.writeln("\r\n[ERRO]: O servidor nao respondeu a nenhuma das tentativas.");
-                        term.writeln("DICA: Verifique se o backend no Render esta 'Live'.");
+                        term.writeln("\r\n[ERRO]: Não foi possível conectar ao servidor.");
+                        term.writeln("DICA: O Render pode levar até 1 minuto para ligar (Cold Start).");
+                        term.writeln("Tente novamente em instantes.");
                     }
                 }
             });

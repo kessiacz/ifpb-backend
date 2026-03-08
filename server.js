@@ -4,83 +4,79 @@ const cors = require("cors");
 const { JSDOM } = require("jsdom");
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
+// Função para buscar editais em uma URL
+async function buscarEditaisNaUrl(url) {
+    try {
+        const response = await axios.get(url, {
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' 
+            },
+            timeout: 12000,
+            validateStatus: (status) => status < 500
+        });
+
+        if (response.status === 404) return [];
+
+        const dom = new JSDOM(response.data);
+        const document = dom.window.document;
+        const cards = document.querySelectorAll(".listing-item, .tileItem");
+        const editaisEncontrados = [];
+
+        cards.forEach(card => {
+            const linkTag = card.querySelector("a");
+            const tituloTag = card.querySelector(".title, h2, .tileHeadline");
+
+            if (linkTag && tituloTag) {
+                let href = linkTag.getAttribute("href");
+                const linkCompleto = href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`;
+                editaisEncontrados.push({
+                    nome: tituloTag.textContent.trim().replace(/\s+/g, ' '),
+                    link: linkCompleto
+                });
+            }
+        });
+
+        return editaisEncontrados;
+
+    } catch (err) {
+        console.log(`Erro ao buscar em ${url}: ${err.message}`);
+        return [];
+    }
+}
+
+// Rota de editais com fallback automático
 app.get("/editais/:categoria/:ano", async (req, res) => {
     const { categoria, ano } = req.params;
-    
-    // Lista de URLs para tentar na ordem de prioridade
-    const urlsParaTestar = [
-        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`,
-        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`
-    ];
+    console.log(`\n--- Buscando editais: ${categoria} / ${ano} ---`);
 
-    console.log(`\n--- Nova busca iniciada: ${categoria} / ${ano} ---`);
+    // Tenta primeiro o ano normal
+    let urls = [`https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`];
 
-    for (const url of urlsParaTestar) {
-        try {
-            console.log(`📡 Tentando buscar em: ${url}`);
-            
-            const response = await axios.get(url, {
-                headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' 
-                },
-                timeout: 12000, 
-                // Permite que o código trate o 404 sem disparar uma exceção que trava o loop
-                validateStatus: (status) => status < 500 
-            });
+    // Se o ano não termina com "-1", adiciona tentativa com "-1" automaticamente
+    if (!ano.endsWith("-1")) urls.push(`https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`);
 
-            // Se a página não existir, logamos e usamos o 'continue' para pular para a próxima URL da lista
-            if (response.status === 404) {
-                console.log(`⚠️ Página não encontrada (404) em: ${url}.`);
-                continue; 
-            }
-
-            const dom = new JSDOM(response.data);
-            const document = dom.window.document;
-            const cards = document.querySelectorAll(".listing-item, .tileItem");
-            let editaisEncontrados = [];
-
-            if (cards.length > 0) {
-                cards.forEach(card => {
-                    const linkTag = card.querySelector("a");
-                    const tituloTag = card.querySelector(".title, h2, .tileHeadline");
-                    
-                    if (linkTag && tituloTag) {
-                        let href = linkTag.getAttribute("href");
-                        const linkCompleto = href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`;
-                        
-                        editaisEncontrados.push({
-                            nome: tituloTag.textContent.trim().replace(/\s+/g, ' '),
-                            link: linkCompleto
-                        });
-                    }
-                });
-
-                if (editaisEncontrados.length > 0) {
-                    console.log(`✅ Sucesso! Encontrados ${editaisEncontrados.length} editais.`);
-                    return res.json({ editais: editaisEncontrados });
-                }
-            }
-            
-            console.log(`ℹ️ Página em ${url} carregada, mas sem editais listados.`);
-
-        } catch (err) {
-            // Se houver erro de conexão/timeout, ele loga e o loop segue para a tentativa com "-1"
-            console.log(`❌ Erro técnico em ${url}: ${err.message}`);
+    for (const url of urls) {
+        const editais = await buscarEditaisNaUrl(url);
+        if (editais.length > 0) {
+            console.log(`Encontrados ${editais.length} editais em: ${url}`);
+            return res.json({ editais });
+        } else {
+            console.log(`Nenhum edital encontrado em: ${url}`);
         }
     }
 
-    // Se percorrer as duas URLs e não encontrar nada
-    console.log("❌ Nenhuma das tentativas retornou resultados.");
-    res.json({ editais: [] });
+    // Nenhum resultado
+    console.log(`Nenhum edital encontrado para ${ano} ou ${ano}-1`);
+    return res.json({ editais: [] });
 });
 
 app.get("/", (req, res) => res.send("API Editais IFPB - Online 🚀"));
 
 app.listen(PORT, () => {
-    console.log(`✅ Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
