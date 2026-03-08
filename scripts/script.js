@@ -1,3 +1,4 @@
+// scripts/script.js
 document.addEventListener('DOMContentLoaded', () => {
     const checkbox = document.querySelector('#checkbox');
     const menuBtn = document.querySelector('.ri-menu-line');
@@ -27,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (menuBtn) menuBtn.addEventListener('click', openMenu);
     if (closeBtn) closeBtn.addEventListener('click', closeMenu);
-    
+
     if (menuOverlay) {
         menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
         menuOverlay.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
@@ -56,13 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         term.onData(e => {
             if (!resolveInput) return;
-            if (e === "\r") { // Enter
+            if (e === "\r") {
                 const data = inputBuffer;
                 inputBuffer = "";
                 term.write("\r\n");
                 resolveInput(data);
                 resolveInput = null;
-            } else if (e === "\u007f") { // Backspace
+            } else if (e === "\u007f") {
                 if (inputBuffer.length > 0) {
                     inputBuffer = inputBuffer.slice(0, -1);
                     term.write("\b \b");
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mostrar_editais = (lista) => {
             if (!lista || lista.length === 0) {
-                term.writeln("\r\nNenhum edital encontrado.");
+                term.writeln("\r\nNenhum edital encontrado. Tente outro ano ou categoria.");
                 return;
             }
             lista.forEach(e => {
@@ -110,8 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const categorias = {
-                        "1": "direcao-geral", "2": "pesquisa", "3": "extensao",
-                        "4": "assistencia-estudantil", "5": "ensino", "6": "inovacao"
+                        "1": "direcao-geral",
+                        "2": "pesquisa",
+                        "3": "extensao",
+                        "4": "assistencia-estudantil",
+                        "5": "ensino",
+                        "6": "inovacao"
                     };
 
                     const categoria = categorias[op];
@@ -120,35 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         continue;
                     }
 
-                    // Função para buscar editais do backend
-                    const buscarEditais = async (categoria, ano) => {
-                        const res = await fetch(`${backendUrl}/editais/${categoria}/${ano}`);
-                        if (!res.ok) throw new Error("Falha na conexao com o servidor");
-                        const data = await res.json();
-                        return data.editais || [];
+                    // Função que chama o backend (com fallback interno)
+                    const buscar = async (anoParaBusca) => {
+                        term.writeln(`\r\nBuscando editais em ${categoria}/${anoParaBusca}...`);
+                        const res = await fetch(`${backendUrl}/editais/${categoria}/${anoParaBusca}`);
+                        if (!res.ok) throw new Error("Falha na conexão com o servidor");
+                        return await res.json();
                     };
 
                     try {
-                        // Tenta ano normal
-                        let editais = await buscarEditais(categoria, anoStr);
-
-                        // Se não encontrou, tenta ano-1
-                        if (!editais || editais.length === 0) {
-                            term.writeln(`Nenhum edital em ${anoStr}. Tentando ${anoStr}-1...`);
-                            editais = await buscarEditais(categoria, `${anoStr}-1`);
-                        }
-
-                        // Mostra resultado final
-                        if (!editais || editais.length === 0) {
-                            term.writeln(`Nenhum edital encontrado para ${anoStr} ou ${anoStr}-1`);
-                        } else {
-                            mostrar_editais(editais);
-                        }
-
+                        const data = await buscar(anoStr);
+                        mostrar_editais(data.editais);
                     } catch (err) {
-                        term.writeln("\r\n[ERRO]: Não foi possível conectar ao servidor.");
-                        term.writeln("DICA: O Render pode levar até 1 minuto para ligar (Cold Start).");
-                        term.writeln("Tente novamente em instantes.");
+                        term.writeln("\r\n[ERRO]: O servidor não respondeu.");
+                        term.writeln("DICA: Verifique se o backend no Render está 'Live'.");
                     }
                 }
             });

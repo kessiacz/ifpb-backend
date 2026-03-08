@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Função para buscar editais em uma URL
+// Função que busca editais em uma URL
 async function buscarEditaisNaUrl(url) {
     try {
         const response = await axios.get(url, {
@@ -49,18 +49,19 @@ async function buscarEditaisNaUrl(url) {
     }
 }
 
-// Rota de editais com fallback automático
+// Rota de editais com fallback automático para ano-1
 app.get("/editais/:categoria/:ano", async (req, res) => {
     const { categoria, ano } = req.params;
+
     console.log(`\n--- Buscando editais: ${categoria} / ${ano} ---`);
 
-    // Tenta primeiro o ano normal
-    let urls = [`https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`];
+    // URLs a serem testadas: primeiro o ano normal, depois o ano-1
+    const urlsParaTestar = [
+        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`,
+        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`
+    ];
 
-    // Se o ano não termina com "-1", adiciona tentativa com "-1" automaticamente
-    if (!ano.endsWith("-1")) urls.push(`https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`);
-
-    for (const url of urls) {
+    for (const url of urlsParaTestar) {
         const editais = await buscarEditaisNaUrl(url);
         if (editais.length > 0) {
             console.log(`Encontrados ${editais.length} editais em: ${url}`);
@@ -70,7 +71,6 @@ app.get("/editais/:categoria/:ano", async (req, res) => {
         }
     }
 
-    // Nenhum resultado
     console.log(`Nenhum edital encontrado para ${ano} ou ${ano}-1`);
     return res.json({ editais: [] });
 });
