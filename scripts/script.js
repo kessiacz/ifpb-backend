@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         let data = await buscar(anoStr);
                         if (!data.editais || data.editais.length === 0) {
-                            term.writeln(`⚠️ Nada em ${anoStr}. Tentando ${anoStr}-1...`);
+                            term.writeln(`Nada em ${anoStr}. Tentando ${anoStr}-1...`);
                             data = await buscar(`${anoStr}-1`);
                         }
                         mostrar_editais(data.editais);
