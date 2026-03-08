@@ -12,46 +12,53 @@ app.use(express.json());
 
 app.get("/editais/:categoria/:ano", async (req, res) => {
     const { categoria, ano } = req.params;
-    const url = `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`;
+    
+    // Lista de URLs para tentar (Padrão e a variação que você descobriu)
+    const urlsParaTestar = [
+        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}`,
+        `https://www.ifpb.edu.br/campus/cajazeiras/editais/${categoria}/${ano}-1`
+    ];
 
-    try {
-        console.log(`Tentando acessar: ${url}`);
-        
-        const response = await axios.get(url, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
+    let editais = [];
 
-        const dom = new JSDOM(response.data);
-        const document = dom.window.document;
-        
-        const cards = document.querySelectorAll(".listing-item"); 
-        const editais = [];
+    for (const url of urlsParaTestar) {
+        try {
+            console.log(`Tentando conexão em: ${url}`);
+            const response = await axios.get(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+                timeout: 5000 // 5 segundos para não travar o Render
+            });
 
-        cards.forEach(card => {
-            const linkTag = card.querySelector("a");
-            const tituloTag = card.querySelector(".title");
-            
-            if (linkTag && tituloTag) {
-                let href = linkTag.getAttribute("href");
-                const linkCompleto = href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`;
-                
-                editais.push({
-                    nome: tituloTag.textContent.trim(),
-                    link: linkCompleto
+            const dom = new JSDOM(response.data);
+            const document = dom.window.document;
+            const cards = document.querySelectorAll(".listing-item");
+
+            if (cards.length > 0) {
+                cards.forEach(card => {
+                    const linkTag = card.querySelector("a");
+                    const tituloTag = card.querySelector(".title, h2");
+                    
+                    if (linkTag && tituloTag) {
+                        let href = linkTag.getAttribute("href");
+                        const linkCompleto = href.startsWith("http") ? href : `https://www.ifpb.edu.br${href}`;
+                        editais.push({
+                            nome: tituloTag.textContent.trim(),
+                            link: linkCompleto
+                        });
+                    }
                 });
+                
+                // Se encontrou editais nesta URL, interrompe o loop e retorna
+                console.log(`✅ Sucesso em ${url}: ${editais.length} itens encontrados.`);
+                break; 
             }
-        });
-
-        console.log(`Encontrados ${editais.length} editais.`);
-        res.json({ editais });
-
-    } catch (err) {
-        console.error("Erro ao buscar no IFPB:", err.message);
-        // Evita enviar resposta duplicada se o erro ocorrer após o res.json
-        if (!res.headersSent) {
-            res.status(500).json({ editais: [], error: "Erro na extração dos dados." });
+        } catch (err) {
+            console.log(`⚠️ Falha na URL ${url}: ${err.message}`);
+            // Continua para a próxima tentativa no loop
         }
     }
+
+    res.json({ editais });
 });
 
 app.listen(PORT, () => {
