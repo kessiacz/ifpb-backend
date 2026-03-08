@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Web Scraper - Terminal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/style.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    
+    <script defer src="scripts/script.js"></script>
+</head>
+<body>
+    
+    <div class="menuOpen hidden" id="menuOverlay">
+        <div class="menu-content">
+            <h2>MENU</h2>
+            <nav>
+                <a href="https://kessiacz.github.io/">Página Inicial</a>
+                <a href="https://kessiacz.github.io/#sobre">Apresentação</a>
+                <a href="https://kessiacz.github.io/#exercicios">Exercícios</a>
+                <a href="https://kessiacz.github.io/#contacts">Contatos</a>
+            </nav>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="header-left">
+                <div class="menu">
+                    <i class="ri-menu-line" id="openIcon"></i>
+                    <i class="ri-close-line hidden" id="closeIcon"></i>
+                </div>
+                <a href="https://kessiacz.github.io/" class="back-button">
+                    <i class="ri-arrow-left-line"></i>
+                </a>
+            </div>
+
+            <nav class="nav-desktop">
+               <a href="https://kessiacz.github.io/"><h2>PORTFÓLIO</h2></a>
+            </nav>
+
+            <div class="toggle">
+                <input type="checkbox" name="checkbox" id="checkbox">
+                <label for="checkbox" class="label">
+                    <div class="box"></div>
+                </label>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="page-title">
+            <h2>WEB SCRAPY COM PYTHON</h2>
+        </div>
+
+        <section class="container-exercicios">
+            <details open> <summary>WEB SCRAPING COM PYTHON</summary>
+                <div class="content">
+                    <p>Console interativo rodando o script <strong>main.py</strong> para listagem de editais do IFPB.</p>
+                    
+                    <div class="terminal-ide-container">
+                        <div class="terminal-ide-header">
+                            <div class="dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span>main.py - Terminal Interativo</span>
+                            <button id="btnRunTerminal">RUN</button>
+                        </div>
+                        <div id="terminal-container"></div>
+                    </div>
+                </div>
+            </details>
+        </section>
+    </main>
+</body>
+</html>
