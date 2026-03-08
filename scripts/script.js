@@ -129,21 +129,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
 
                     try {
-                        // TENTATIVA 1: Ano normal
-                        let data = await buscar(anoStr);
+                        let data;
+                        try {
+                            // TENTATIVA 1: Ano normal
+                            data = await buscar(anoStr);
+                        } catch (e) {
+                            // Se a primeira conexão falhou, não desistimos! 
+                            // Avisamos o usuário e tentamos o Plano B
+                            term.writeln("⚠️ Falha na primeira conexão. Tentando link alternativo diretamente...");
+                            data = await buscar(`${anoStr}-1`);
+                        }
 
-                        // TENTATIVA 2: Fallback para ano-1 se a primeira voltar vazia
+                        // Se a conexão funcionou mas veio vazio, também tenta o Plano B
                         if (!data.editais || data.editais.length === 0) {
-                            term.writeln(`⚠️ Nenhum edital em ${anoStr}. Tentando no link alternativo (${anoStr}-1)...`);
+                            term.writeln(`⚠️ Nenhum edital em ${anoStr}. Tentando ${anoStr}-1...`);
                             data = await buscar(`${anoStr}-1`);
                         }
 
                         mostrar_editais(data.editais);
 
                     } catch (err) {
-                        term.writeln("\r\n[ERRO]: Nao foi possivel conectar ao servidor.");
-                        term.writeln("DICA: O Render pode levar ate 1 minuto para ligar (Cold Start).");
-                        term.writeln("Tente novamente em instantes.");
+                        term.writeln("\r\n[ERRO]: O servidor nao respondeu a nenhuma das tentativas.");
+                        term.writeln("DICA: Verifique se o backend no Render esta 'Live'.");
                     }
                 }
             });
