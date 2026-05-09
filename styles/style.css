@@ -124,11 +124,17 @@ body::before {
 
   /* ── HEADER ── */
 header {
-    position: sticky; top: 0; z-index: 100;
-    height: var(--header-h);
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--header-h);
+  border-bottom: 1px solid var(--border);
+  background: var(--header-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: background .35s, border-color .35s;
 }
 
 .header-inner {
@@ -198,7 +204,7 @@ header {
   /* ── MAIN ── */
 main {
     max-width: 1200px; margin: 0 auto;
-    padding: 3rem 1.5rem 5rem;
+    padding: calc(var(--header-h) + 2rem) 1.5rem 5rem;
 }
 
   /* breadcrumb */
@@ -413,6 +419,37 @@ main {
 .cm { color: #666; font-style: italic; }
 .nu { color: #bd93f9; }
 .cl { color: #8be9fd; }
+
+  /* ── CURSOR (desktop) ── */
+@media (min-width: 1024px) {
+    body { cursor: none; }
+    a, button, .toggle-label, .run-btn { cursor: none; }
+}
+
+.cursor-dot, 
+.cursor-outline {
+    pointer-events: none; /* Garante que o cursor não atrapalhe os cliques */
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    z-index: 9999;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
+}
+
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent); /* O verde #00d9a4 */
+}
+
+.cursor-outline {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--accent);
+    opacity: 0.5;
+}
 
   /* ── PROGRESSAO ── */
 #progress-bar {

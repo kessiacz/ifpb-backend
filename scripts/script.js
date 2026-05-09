@@ -23,6 +23,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ── Cursor (só desktop) ──
+  const cursorDot = document.querySelector(".cursor-dot");
+  const cursorOutline = document.querySelector(".cursor-outline");
+
+  window.addEventListener("mousemove", (e) => {
+      const posX = e.clientX;
+      const posY = e.clientY;
+
+      cursorDot.style.left = `${posX}px`;
+      cursorDot.style.top = `${posY}px`;
+
+      cursorOutline.animate({
+          left: `${posX}px`,
+          top: `${posY}px`
+      }, { duration: 500, fill: "forwards" });
+  });
+
+  window.addEventListener("mousedown", () => {
+      cursorOutline.style.transform = "translate(-50%, -50%) scale(0.7)";
+  });
+
+  window.addEventListener("mouseup", () => {
+      cursorOutline.style.transform = "translate(-50%, -50%) scale(1)";
+  });
+
   /* ── BARRA DE PROGRESSAO ── */
   const progressBar = document.getElementById('progress-bar');
 
