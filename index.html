@@ -1,81 +1,201 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Web Scraper - Terminal</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles/style.css">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
-    
-    <script defer src="scripts/script.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraping — IFPB | Kessia Carvalho</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+  <link rel="stylesheet" href="./styles/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script defer src="./scripts/script.js"></script>
 </head>
 <body>
-    
-    <div class="menuOpen hidden" id="menuOverlay">
-        <div class="menu-content">
-            <h2>MENU</h2>
-            <nav>
-                <a href="https://kessiacz.github.io/">Página Inicial</a>
-                <a href="https://kessiacz.github.io/#sobre">Apresentação</a>
-                <a href="https://kessiacz.github.io/#exercicios">Exercícios</a>
-                <a href="https://kessiacz.github.io/#contacts">Contatos</a>
-            </nav>
+
+  <div class="glow-blob glow-blob-1"></div>
+  <div class="glow-blob glow-blob-2"></div>
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <a class="back-btn" href="https://kessiacz.github.io/">
+          <i class="ri-arrow-left-line"></i> Portfólio
+        </a>
+      </div>
+      <a class="header-logo" href="https://kessiacz.github.io/">PORTFÓLIO</a>
+      <div class="header-right">
+        <div class="toggle-wrap">
+          <span>☾</span>
+          <input type="checkbox" id="themeToggle" class="toggle-input">
+          <label for="themeToggle" class="toggle-label"></label>
+          <span>☀</span>
         </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- breadcrumb -->
+    <div class="breadcrumb">
+      <a href="https://kessiacz.github.io/">kessiacz</a>
+      <span>/</span>
+      <span>ifpb-editais</span>
     </div>
 
-    <header>
-        <div class="container">
-            <div class="header-left">
-                <div class="menu">
-                    <i class="ri-menu-line" id="openIcon"></i>
-                    <i class="ri-close-line hidden" id="closeIcon"></i>
-                </div>
-                <a href="https://kessiacz.github.io/" class="back-button">
-                    <i class="ri-arrow-left-line"></i>
-                </a>
-            </div>
+    <!-- page head -->
+    <div class="page-head">
+      <div>
+        <div class="page-head-label">04 — projeto</div>
+        <h1>Web Scraping<br>IFPB Cajazeiras</h1>
+      </div>
+      <div class="page-head-meta">
+        <span class="tag green">● online</span>
+        <span class="tag">Python</span>
+        <span class="tag">BeautifulSoup</span>
+        <span class="tag">Automação</span>
+      </div>
+    </div>
 
-            <nav class="nav-desktop">
-               <a href="https://kessiacz.github.io/"><h2>PORTFÓLIO</h2></a>
-            </nav>
-
-            <div class="toggle">
-                <input type="checkbox" name="checkbox" id="checkbox">
-                <label for="checkbox" class="label">
-                    <div class="box"></div>
-                </label>
-            </div>
+    <!-- desc -->
+    <div class="desc-block">
+      <p class="desc-text">
+        Terminal interativo do <strong>main.py</strong> — automação em Python para listar editais
+        do <strong>IFPB Campus Cajazeiras</strong> por categoria e ano. Clique em
+        <strong>RUN</strong>, escolha a categoria e informe o ano desejado.
+      </p>
+      <div class="desc-aside">
+        <div class="aside-item">
+          <div class="aside-label">Backend</div>
+          <div class="aside-value">ifpb-backend.onrender.com</div>
         </div>
-    </header>
-    
-    <main>
-        <div class="page-title">
-            <h2>WEB SCRAPY COM PYTHON</h2>
+        <div class="aside-item">
+          <div class="aside-label">Stack</div>
+          <div class="aside-value">Python · Requests · BS4</div>
         </div>
+        <div class="aside-item">
+          <div class="aside-label">Fonte</div>
+          <div class="aside-value">ifpb.edu.br / cajazeiras</div>
+        </div>
+      </div>
+    </div>
 
-        <section class="container-exercicios">
-            <div class="terminal-wrapper"> 
-                <div class="terminal-title">LISTAGEM DE EDITAIS DO IFPB - CAMPUS CAJAZEIRAS</div>
-                <div class="content">
-                    <p>Terminal interativo de funcionamento do arquivo <strong>main.py</strong> para listagem de editais do IFPB Campus Cajazeiras.</p>
-                    <div class="terminal-ide-container">
-                        <div class="terminal-ide-header">
-                            <div class="dots">
-                                <span></span><span></span><span></span>
-                            </div>
-                            <button id="btnRunTerminal">RUN</button>
-                        </div>
-                        <div id="terminal-container"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+    <!-- TERMINAL -->
+    <div class="terminal-block">
+      <div class="terminal-bar">
+        <div class="terminal-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="terminal-title-bar">main.py — ifpb-editais — bash</div>
+        <button class="run-btn" id="btnRun">▶ RUN</button>
+      </div>
+      <div id="terminal-container"></div>
+    </div>
+
+    <!-- SOURCE CODE -->
+    <div class="source-section">
+      <div class="source-header">
+        <i class="ri-code-s-slash-line"></i>
+        <span>Código Fonte</span>
+        <span style="margin-left:auto;font-size:.68rem">main.py · script.js</span>
+      </div>
+      <div class="source-tabs">
+        <button class="source-tab active" data-tab="python">main.py</button>
+        <button class="source-tab" data-tab="js">script.js</button>
+      </div>
+      <div class="source-body">
+        <pre class="code-block active" id="tab-python"><span class="kw">import</span> requests
+  <span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
+  <span class="kw">from</span> datetime <span class="kw">import</span> datetime
+  <span class="kw">from</span> urllib.parse <span class="kw">import</span> urljoin
+
+  <span class="kw">class</span> <span class="cl">GetInfoIFPB</span>:
+      <span class="kw">def</span> <span class="fn">extrair_editais</span>(self, url):
+          page = requests.<span class="fn">get</span>(url)
+          <span class="kw">if</span> page.status_code != <span class="nu">200</span>:
+              <span class="kw">return</span> []
+          soup = <span class="cl">BeautifulSoup</span>(page.content, <span class="st">'html.parser'</span>)
+          editais = []
+          cards = soup.<span class="fn">find_all</span>(<span class="st">"div"</span>, class_=<span class="st">"listing-item edital-listing"</span>)
+          <span class="kw">for</span> card <span class="kw">in</span> cards:
+              link_tag = card.<span class="fn">find</span>(<span class="st">"a"</span>)
+              titulo = card.<span class="fn">find</span>(<span class="st">"h2"</span>, class_=<span class="st">"title"</span>)
+              <span class="kw">if not</span> link_tag <span class="kw">or not</span> titulo:
+                  <span class="kw">continue</span>
+              link = <span class="fn">urljoin</span>(url, link_tag.<span class="fn">get</span>(<span class="st">"href"</span>))
+              nome = titulo.<span class="fn">get_text</span>(strip=<span class="kw">True</span>)
+              editais.<span class="fn">append</span>({link: nome})
+          <span class="kw">return</span> editais
+
+      <span class="kw">def</span> <span class="fn">get_editaisDirecaoGeralCZAno</span>(self, ano):
+          <span class="kw">return</span> self.<span class="fn">extrair_editais</span>(
+              <span class="st">f"https://www.ifpb.edu.br/campus/cajazeiras/editais/direcao-geral/{ano}"</span>)
+
+      <span class="cm"># ... demais métodos por categoria</span>
+
+  <span class="kw">def</span> <span class="fn">mostrar_editais</span>(editais):
+      <span class="kw">if not</span> editais:
+          <span class="fn">print</span>(<span class="st">"Nenhum edital encontrado para este ano."</span>)
+          <span class="kw">return</span>
+      <span class="kw">for</span> edital <span class="kw">in</span> editais:
+          <span class="kw">for</span> link, nome <span class="kw">in</span> edital.<span class="fn">items</span>():
+              <span class="fn">print</span>(<span class="st">"-"</span> * <span class="nu">77</span>)
+              <span class="fn">print</span>(<span class="st">f"{nome}\n{link}"</span>)
+      <span class="fn">print</span>(<span class="st">"-"</span> * <span class="nu">77</span>)
+
+  <span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+      ifcz = <span class="cl">GetInfoIFPB</span>()
+      <span class="kw">while True</span>:
+          op = <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"(0) Sair\n(1) Direção Geral\n..."</span>))
+          <span class="kw">if</span> op == <span class="nu">0</span>: <span class="kw">break</span>
+          ano = <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"Digite o ano desejado: "</span>))
+          <span class="cm"># chama o método correspondente e exibe</span></pre>
+
+        <pre class="code-block" id="tab-js"><span class="cm">// Inicializa xterm.js</span>
+  <span class="kw">const</span> term = <span class="kw">new</span> <span class="cl">Terminal</span>({
+    cursorBlink: <span class="kw">true</span>,
+    rows: <span class="nu">22</span>,
+    theme: { background: <span class="st">'#000000'</span>, foreground: <span class="st">'#ffffff'</span> },
+    fontFamily: <span class="st">'JetBrains Mono, Courier New, monospace'</span>,
+    fontSize: <span class="nu">14</span>
+  });
+
+  <span class="cm">// Input assíncrono via promise</span>
+  <span class="kw">const</span> <span class="fn">customInput</span> = <span class="kw">async</span> (msg = <span class="st">""</span>) => {
+    term.<span class="fn">write</span>(msg);
+    <span class="kw">return new</span> <span class="cl">Promise</span>(resolve => { resolveInput = resolve; });
+  };
+
+  <span class="cm">// Busca no backend (onrender.com)</span>
+  <span class="kw">const</span> <span class="fn">buscar</span> = <span class="kw">async</span> (categoria, ano) => {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(
+      <span class="st">`https://ifpb-backend.onrender.com/editais/${categoria}/${ano}`</span>);
+    <span class="kw">return await</span> res.<span class="fn">json</span>();
+  };
+
+  <span class="cm">// Loop principal</span>
+  <span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">const</span> op = <span class="kw">await</span> <span class="fn">customInput</span>(<span class="st">"Escolha uma opcao: "</span>);
+    <span class="kw">if</span> (op === <span class="st">"0"</span>) { term.<span class="fn">writeln</span>(<span class="st">"Encerrado."</span>); <span class="kw">break</span>; }
+    <span class="kw">const</span> ano = <span class="kw">await</span> <span class="fn">customInput</span>(<span class="st">"Digite o ano (ex: 2024): "</span>);
+    <span class="cm">// tenta ano direto, fallback para ano-1</span>
+    <span class="kw">let</span> data = <span class="kw">await</span> <span class="fn">buscar</span>(categoria, ano);
+    <span class="kw">if</span> (!data.editais?.length)
+      data = <span class="kw">await</span> <span class="fn">buscar</span>(categoria, <span class="st">`${ano}-1`</span>);
+    <span class="fn">mostrarEditais</span>(data.editais);
+  }</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span>© 2026 Kessia Carvalho</span>
+    <a href="https://kessiacz.github.io/">← voltar ao portfólio</a>
+  </footer>
+
 </body>
 </html>

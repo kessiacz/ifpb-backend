@@ -1,126 +1,220 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const checkbox = document.querySelector('#checkbox');
-    const menuBtn = document.querySelector('.ri-menu-line');
-    const closeBtn = document.querySelector('.ri-close-line');
-    const menuOverlay = document.querySelector('#menuOverlay');
 
-    if (checkbox) checkbox.addEventListener('change', () => document.body.classList.toggle('light-mode'));
+  /* ── THEME TOGGLE ── */
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('change', () => {
+        const on = themeToggle.checked;
+        document.documentElement.classList.toggle('light-mode', on);
+        document.body.classList.toggle('light-mode', on);
+    });
 
-    const openMenu = () => {
-        menuOverlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    };
-    const closeMenu = () => {
-        menuOverlay.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    };
+  /* ── THEME TOGGLE ── */
+  document.getElementById('themeToggle').addEventListener('change', e => {
+    document.body.classList.toggle('light-mode', e.target.checked);
+  });
 
-    if (menuBtn) menuBtn.addEventListener('click', openMenu);
-    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  /* ── SOURCE TABS ── */
+  document.querySelectorAll('.source-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
 
-    (async () => {
-        const term = new Terminal({
-            cursorBlink: true,
-            rows: 20,
-            theme: { background: '#000000', foreground: '#ffffff' },
-            fontFamily: 'Courier New, monospace',
-            fontSize: 14
-        });
+  /* ── TERMINAL ── */
+  (async () => {
+    const term = new Terminal({
+      cursorBlink: true,
+      rows: 22,
+      cols: 80,
+      theme: {
+        background: '#000000',
+        foreground: '#e8e8e8',
+        cursor: '#00ff88',
+        green: '#00ff88',
+        brightGreen: '#00ff88',
+      },
+      fontFamily: 'JetBrains Mono, Courier New, monospace',
+      fontSize: 14,
+      lineHeight: 1.4,
+      scrollback: 500,
+    });
 
-        term.open(document.getElementById('terminal-container'));
-        term.writeln("Terminal pronto. Clique em RUN.");
+    term.open(document.getElementById('terminal-container'));
 
-        let inputBuffer = "";
-        let resolveInput;
+    const W  = s => term.write(s);
+    const WL = s => term.writeln(s);
 
-        const customInput = async (promptMsg = "") => {
-            term.write(promptMsg);
-            return new Promise(resolve => { resolveInput = resolve; });
-        };
+    // colors
+    const G  = s => `\x1b[32m${s}\x1b[0m`;   // green
+    const Y  = s => `\x1b[33m${s}\x1b[0m`;   // yellow
+    const C  = s => `\x1b[36m${s}\x1b[0m`;   // cyan
+    const R  = s => `\x1b[31m${s}\x1b[0m`;   // red
+    const DIM = s => `\x1b[2m${s}\x1b[0m`;   // dim
+    const B  = s => `\x1b[1m${s}\x1b[0m`;    // bold
 
-        term.onData(e => {
-            if (!resolveInput) return;
-            if (e === "\r") {
-                const data = inputBuffer;
-                inputBuffer = "";
-                term.write("\r\n");
-                resolveInput(data);
-                resolveInput = null;
-            } else if (e === "\u007f") {
-                if (inputBuffer.length > 0) {
-                    inputBuffer = inputBuffer.slice(0, -1);
-                    term.write("\b \b");
-                }
-            } else {
-                inputBuffer += e;
-                term.write(e);
-            }
-        });
+    WL(G('╔══════════════════════════════════════════════════════════╗'));
+    WL(G('║') + B('  IFPB Campus Cajazeiras — Listagem de Editais       ') + G('║'));
+    WL(G('╚══════════════════════════════════════════════════════════╝'));
+    WL('');
+    WL(DIM('  Terminal pronto. Clique em ') + Y('RUN') + DIM(' para iniciar.'));
+    WL('');
 
-        const mostrar_editais = (lista) => {
-            if (!lista || lista.length === 0) {
-                term.writeln("\r\nNenhum edital encontrado em nenhuma das tentativas.");
-                return;
-            }
-            lista.forEach(e => {
-                term.writeln("-".repeat(50));
-                term.writeln(`EDITAL: ${e.nome}`);
-                term.writeln(`LINK: ${e.link}`);
-            });
-            term.writeln("-".repeat(50));
-        };
+    let inputBuffer = '';
+    let resolveInput = null;
 
-        const btnRun = document.getElementById('btnRunTerminal');
-        if (btnRun) {
-            btnRun.addEventListener('click', async () => {
-                term.clear();
-                const backendUrl = "https://ifpb-backend.onrender.com";
-
-                while (true) {
-                    term.writeln("\r\n(0) Sair\r\n(1) Direcao Geral\r\n(2) Pesquisa\r\n(3) Extensao\r\n(4) Assistencia Estudantil\r\n(5) Ensino\r\n(6) Inovacao");
-                    const rawOp = await customInput("Escolha uma opcao: ");
-                    const op = rawOp.trim();
-
-                    if (op === "0") { term.writeln("Encerrado."); break; }
-
-                    const categorias = {
-                        "1": "direcao-geral", "2": "pesquisa", "3": "extensao",
-                        "4": "assistencia-estudantil", "5": "ensino", "6": "inovacao"
-                    };
-
-                    const categoria = categorias[op];
-                    if (!categoria) {
-                        term.writeln("\r\n[!] Opcao invalida. Digite o numero (1-6).");
-                        continue;
-                    }
-
-                    const rawAno = await customInput("Digite o ano (ex: 2024): ");
-                    const anoStr = rawAno.trim();
-
-                    const buscar = async (anoBusca) => {
-                        term.writeln(`\r\nTentando: ${categoria}/${anoBusca}...`);
-                        const res = await fetch(`${backendUrl}/editais/${categoria}/${anoBusca}`);
-                        return await res.json();
-                    };
-
-                    try {
-                        let data = await buscar(anoStr);
-                        if (!data.editais || data.editais.length === 0) {
-                            term.writeln(`Nada em ${anoStr}. Tentando ${anoStr}-1...`);
-                            data = await buscar(`${anoStr}-1`);
-                        }
-                        mostrar_editais(data.editais);
-                    } catch (err) {
-                        term.writeln("\r\n[!] Erro de conexao. Tentando alternativa direto...");
-                        try {
-                            const dataAlt = await buscar(`${anoStr}-1`);
-                            mostrar_editais(dataAlt.editais);
-                        } catch (e) {
-                            term.writeln("\r\n[ERRO]: Servidor offline. Tente novamente em 1 min.");
-                        }
-                    }
-                }
-            });
+    term.onData(e => {
+      if (!resolveInput) return;
+      if (e === '\r') {
+        const data = inputBuffer;
+        inputBuffer = '';
+        W('\r\n');
+        resolveInput(data);
+        resolveInput = null;
+      } else if (e === '\u007f') {
+        if (inputBuffer.length > 0) {
+          inputBuffer = inputBuffer.slice(0, -1);
+          W('\b \b');
         }
-    })();
+      } else {
+        inputBuffer += e;
+        W(e);
+      }
+    });
+
+    const ask = (msg = '') => {
+      W(msg);
+      return new Promise(r => { resolveInput = r; });
+    };
+
+    const backendUrl = 'https://ifpb-backend.onrender.com';
+
+    const categorias = {
+      '1': 'direcao-geral',
+      '2': 'pesquisa',
+      '3': 'extensao',
+      '4': 'assistencia-estudantil',
+      '5': 'ensino',
+      '6': 'inovacao'
+    };
+
+    const catLabels = {
+      '1': 'Direção Geral',
+      '2': 'Pesquisa',
+      '3': 'Extensão',
+      '4': 'Assistência Estudantil',
+      '5': 'Ensino',
+      '6': 'Inovação'
+    };
+
+    const buscar = async (cat, ano) => {
+      const res = await fetch(`${backendUrl}/editais/${cat}/${ano}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    };
+
+    const mostrarEditais = (lista) => {
+      if (!lista || lista.length === 0) {
+        WL('');
+        WL(Y('  Nenhum edital encontrado para os parâmetros informados.'));
+        WL('');
+        return;
+      }
+      WL('');
+      WL(G(`  ─── ${lista.length} edital(is) encontrado(s) ───`));
+      WL('');
+      lista.forEach((e, i) => {
+        WL(DIM(`  [${'0'.repeat(2 - String(i+1).length)}${i+1}] `) + B(e.nome || '—'));
+        WL('      ' + C(e.link || ''));
+        WL('');
+      });
+    };
+
+    const menu = () => {
+      WL(DIM('  ┌─────────────────────────────────┐'));
+      WL(DIM('  │') + '  ' + Y('(0)') + ' Sair                       ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(1)') + ' Direção Geral              ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(2)') + ' Pesquisa                   ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(3)') + ' Extensão                   ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(4)') + ' Assistência Estudantil     ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(5)') + ' Ensino                     ' + DIM('│'));
+      WL(DIM('  │') + '  ' + G('(6)') + ' Inovação                   ' + DIM('│'));
+      WL(DIM('  └─────────────────────────────────┘'));
+      WL('');
+    };
+
+    const btn = document.getElementById('btnRun');
+
+    const runSession = async () => {
+      btn.disabled = true;
+      btn.textContent = '● rodando';
+      term.clear();
+
+      WL(G('╔══════════════════════════════════════════════════════════╗'));
+      WL(G('║') + B('  IFPB Campus Cajazeiras — Listagem de Editais       ') + G('║'));
+      WL(G('╚══════════════════════════════════════════════════════════╝'));
+      WL('');
+
+      while (true) {
+        menu();
+        const rawOp = await ask(G('  ❯ ') + 'Escolha uma opção: ');
+        const op = rawOp.trim();
+
+        if (op === '0') {
+          WL('');
+          WL(DIM('  Sessão encerrada. Clique em ') + Y('RUN') + DIM(' para reiniciar.'));
+          break;
+        }
+
+        const cat = categorias[op];
+        if (!cat) {
+          WL('');
+          WL(R('  [!] Opção inválida. Digite um número de 0 a 6.'));
+          WL('');
+          continue;
+        }
+
+        WL('');
+        const rawAno = await ask(G('  ❯ ') + `Categoria: ${B(catLabels[op])} — Ano (ex: 2024): `);
+        const anoStr = rawAno.trim();
+
+        if (!/^\d{4}$/.test(anoStr)) {
+          WL('');
+          WL(R('  [!] Ano inválido. Digite 4 dígitos (ex: 2024).'));
+          WL('');
+          continue;
+        }
+
+        WL('');
+        WL(DIM(`  Buscando ${catLabels[op]} / ${anoStr}...`));
+
+        try {
+          let data = await buscar(cat, anoStr);
+          if (!data.editais || data.editais.length === 0) {
+            WL(DIM(`  Sem resultados em ${anoStr}. Tentando ${anoStr}-1...`));
+            data = await buscar(cat, `${anoStr}-1`);
+          }
+          mostrarEditais(data.editais);
+        } catch (err) {
+          WL(DIM(`  Tentativa principal falhou. Tentando ${anoStr}-1...`));
+          try {
+            const alt = await buscar(cat, `${anoStr}-1`);
+            mostrarEditais(alt.editais);
+          } catch (e2) {
+            WL('');
+            WL(R('  [ERRO] Servidor offline ou sem resposta.'));
+            WL(DIM('         Aguarde ~1 min (cold start) e tente novamente.'));
+            WL('');
+          }
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = '▶ RUN';
+    };
+
+    btn.addEventListener('click', runSession);
+  })();
 });
