@@ -23,6 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  /* ── BARRA DE PROGRESSAO ── */
+  const progressBar = document.getElementById('progress-bar');
+
+  const updateProgress = () => {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = pct + '%';
+  };
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+
   /* ── TERMINAL ── */
   (async () => {
     const term = new Terminal({

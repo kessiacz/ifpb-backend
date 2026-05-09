@@ -31,7 +31,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html{
+    scroll-behavior:smooth;
+    overflow-x:hidden;
+}
 
 body {
     font-family: 'Space Grotesk', sans-serif;
@@ -344,11 +347,12 @@ main {
     min-height: 420px;
 }
 
-  /* xterm overrides */
-.xterm { padding: 4px; }
-.xterm-viewport::-webkit-scrollbar { width: 6px; }
-.xterm-viewport::-webkit-scrollbar-track { background: #111; }
-.xterm-viewport::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  /* ── SCROLLBAR ── */
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:#0a241b; border-radius:8px; border:2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover{ background:#144232; }
+*{ scrollbar-width:thin; scrollbar-color:#0a241b var(--bg); }
 
   /* ── SOURCE SECTION ── */
 .source-section {
@@ -409,6 +413,20 @@ main {
 .cm { color: #666; font-style: italic; }
 .nu { color: #bd93f9; }
 .cl { color: #8be9fd; }
+
+  /* ── PROGRESSAO ── */
+#progress-bar {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--accent);
+  z-index: 200;
+  transition: width .1s linear;
+  box-shadow: 0 0 10px rgba(0,217,164,.5), 0 0 4px rgba(0,217,164,.3);
+  pointer-events: none;
+}
 
   /* ── FOOTER ── */
 footer {
