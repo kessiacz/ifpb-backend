@@ -1,310 +1,275 @@
+"""
+Consulta de Editais - IFPB Campus Cajazeiras
+=============================================
+Estrutura:
+  - Página de categoria  → <div class="listing-item document-listing">
+                               <a href="/campus/.../ANO"></a> // <a href="/campus/.../ANO-1"></a>
+                               <h2>Editais de ANO</h2>
+                           </div>
+
+  - Página de ano        → <div class="listing-item edital-listing">
+                               <a href="/campus/.../slug"></a>
+                               <h2 class="title">Título do edital</h2>
+                           </div>
+"""
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+# ──────────────────────────────────────────────
+# Configurações globais
+# ──────────────────────────────────────────────
+
 BASE_URL = "https://www.ifpb.edu.br/campus/cajazeiras/editais"
 
-categorias = {
-    "1": {
-        "nome": "Assistência Estudantil",
-        "url": f"{BASE_URL}/assistencia-estudantil"
-    },
-    "2": {
-        "nome": "Direção Geral",
-        "url": f"{BASE_URL}/direcao-geral"
-    },
-    "3": {
-        "nome": "Ensino",
-        "url": f"{BASE_URL}/ensino"
-    },
-    "4": {
-        "nome": "Extensão",
-        "url": f"{BASE_URL}/extensao"
-    },
-    "5": {
-        "nome": "Inovação",
-        "url": f"{BASE_URL}/editais-de-inovacao"
-    },
-    "6": {
-        "nome": "Pesquisa",
-        "url": f"{BASE_URL}/editais-de-pesquisa"
-    }
+CATEGORIAS = {
+    "1": {"nome": "Assistência Estudantil", "url": f"{BASE_URL}/assistencia-estudantil"},
+    "2": {"nome": "Direção Geral",           "url": f"{BASE_URL}/direcao-geral"},
+    "3": {"nome": "Ensino",                  "url": f"{BASE_URL}/ensino"},
+    "4": {"nome": "Extensão",                "url": f"{BASE_URL}/extensao"},
+    "5": {"nome": "Inovação",                "url": f"{BASE_URL}/editais-de-inovacao"},
+    "6": {"nome": "Pesquisa",                "url": f"{BASE_URL}/editais-de-pesquisa"},
 }
 
+SEPARADOR = "─" * 72
 
-def get_soup(url):
 
+# ──────────────────────────────────────────────
+# Funções de scraping
+# ──────────────────────────────────────────────
+
+def _get_soup(url: str) -> BeautifulSoup | None:
+    """Faz a requisição HTTP e retorna o BeautifulSoup, ou None em caso de falha."""
     try:
-
         resposta = requests.get(url, timeout=15)
         resposta.raise_for_status()
-
         return BeautifulSoup(resposta.content, "html.parser")
-
     except requests.RequestException as erro:
-
-        print(f"\nErro ao acessar o site.")
-        print(erro)
-
+        print(f"\n[ERRO] Não foi possível acessar:\n  {url}\n  Detalhe: {erro}\n")
         return None
 
 
-def buscar_anos_categoria(url_categoria):
+def buscar_anos_da_categoria(url_categoria: str) -> list[dict]:
+    """
+    Acessa a página de categoria e retorna os anos disponíveis.
 
-    soup = get_soup(url_categoria)
-
+    Cada item é um <div class="listing-item document-listing"> contendo:
+      - <a href="/campus/.../ANO">  (href relativo, sem texto)
+      - <h2>Editais de ANO</h2>    (sem classe)
+    """
+    soup = _get_soup(url_categoria)
     if not soup:
         return []
 
     anos = []
-
-    cards = soup.find_all("div", class_="listing-item")
-
-    for card in cards:
-
+    for card in soup.find_all("div", class_="listing-item"):
+        # Página de categoria usa "document-listing"; ignora "edital-listing"
         classes = card.get("class", [])
-
-        # pega apenas os cards de ano
         if "document-listing" not in classes:
             continue
 
-        link = card.find("a", href=True)
-        titulo = card.find("h2")
+        link_tag = card.find("a", href=True)
+        h2       = card.find("h2")
 
-        if not link or not titulo:
+        if not link_tag or not h2:
             continue
 
-        texto = titulo.get_text(strip=True)
-
-        if not texto.lower().startswith("editais de"):
+        titulo = h2.get_text(strip=True)
+        if not titulo.lower().startswith("editais de"):
             continue
 
         anos.append({
-            "ano": texto.split()[-1],
-            "url": urljoin(url_categoria, link["href"])
+            "ano": titulo.split()[-1],
+            "url": urljoin(url_categoria, link_tag["href"]),
         })
 
     return anos
 
 
-def buscar_editais_ano(url_ano):
+def buscar_editais_de_ano(url_ano: str) -> list[dict]:
+    """
+    Acessa a página de um ano e retorna os editais individuais.
 
-    soup = get_soup(url_ano)
+    Cada item é um <div class="listing-item edital-listing"> contendo:
+      - <a href="/campus/.../slug">  (href relativo, sem texto)
+      - <h2 class="title">Título</h2>
 
+    Retorna: [{"titulo": "...", "link": "..."}, ...]
+    """
+    soup = _get_soup(url_ano)
     if not soup:
         return []
 
     editais = []
-
-    cards = soup.find_all("div", class_="listing-item")
-
-    for card in cards:
-
+    for card in soup.find_all("div", class_="listing-item"):
         classes = card.get("class", [])
-
-        # pega apenas os editais
         if "edital-listing" not in classes:
             continue
 
-        link = card.find("a", href=True)
-        titulo = card.find("h2", class_="title")
+        link_tag = card.find("a", href=True)
+        titulo   = card.find("h2", class_="title")
 
-        if not link or not titulo:
+        if not link_tag or not titulo:
             continue
 
         editais.append({
             "titulo": titulo.get_text(strip=True),
-            "link": urljoin(url_ano, link["href"])
+            "link":   urljoin(url_ano, link_tag["href"]),
         })
 
     return editais
 
 
-def buscar_editais_recentes():
-
-    soup = get_soup(BASE_URL)
-
+def buscar_editais_recentes_principal() -> list[dict]:
+    """
+    Coleta os editais que aparecem na página principal
+    (os mais recentes de todas as categorias).
+    """
+    soup = _get_soup(BASE_URL)
     if not soup:
         return []
 
     editais = []
-
-    cards = soup.find_all("div", class_="listing-item")
-
-    for card in cards:
-
+    for card in soup.find_all("div", class_="listing-item"):
         classes = card.get("class", [])
-
         if "edital-listing" not in classes:
             continue
 
-        link = card.find("a", href=True)
-        titulo = card.find("h2", class_="title")
+        link_tag = card.find("a", href=True)
+        titulo   = card.find("h2", class_="title")
 
-        if not link or not titulo:
+        if not link_tag or not titulo:
             continue
 
         editais.append({
             "titulo": titulo.get_text(strip=True),
-            "link": urljoin(BASE_URL, link["href"])
+            "link":   urljoin(BASE_URL, link_tag["href"]),
         })
 
     return editais
 
 
-def mostrar_editais(editais, titulo=""):
+# ──────────────────────────────────────────────
+# Funções de exibição
+# ──────────────────────────────────────────────
 
-    print("\n" + "-" * 80)
-
-    if titulo:
-        print(titulo)
-        print("-" * 80)
+def exibir_editais(editais: list[dict], cabecalho: str = "") -> None:
+    """Imprime a lista de editais formatada."""
+    print(f"\n{SEPARADOR}")
+    if cabecalho:
+        print(f"  {cabecalho}")
+        print(SEPARADOR)
 
     if not editais:
-        print("Nenhum edital encontrado.")
-        print("-" * 80)
+        print("  Nenhum edital encontrado.")
+        print(SEPARADOR)
         return
 
     for i, edital in enumerate(editais, start=1):
+        print(f"\n  [{i:02d}] {edital['titulo']}")
+        print(f"        {edital['link']}")
 
-        print(f"\n[{i}] {edital['titulo']}")
-        print(edital["link"])
-
-    print("\n" + "-" * 80)
-    print(f"Total encontrados: {len(editais)}")
-    print("-" * 80)
+    print(f"\n{SEPARADOR}")
+    print(f"  Total: {len(editais)} edital(is) encontrado(s).")
+    print(SEPARADOR)
 
 
-def selecionar_ano(anos):
+def exibir_menu_principal() -> None:
+    print(f"\n{'═' * 72}")
+    print("  EDITAIS – IFPB Campus Cajazeiras")
+    print(f"{'═' * 72}")
+    print("  (0) Sair")
+    for chave, cat in CATEGORIAS.items():
+        print(f"  ({chave}) {cat['nome']}")
+    print(f"  (T) Todos os editais recentes (página principal)")
+    print(f"{'─' * 72}")
 
-    print("\nAnos disponíveis:\n")
 
-    for i, ano in enumerate(anos, start=1):
-        print(f"({i}) {ano['ano']}")
+# ──────────────────────────────────────────────
+# Fluxo de seleção de ano
+# ──────────────────────────────────────────────
 
-    ultimo = len(anos)
+def selecionar_ano(anos_disponiveis: list[dict]) -> dict | None:
+    """
+    Exibe os anos e pede escolha. Retorna o dict do ano, {"todos": True}, ou None.
+    """
+    print("\n  Anos disponíveis nesta categoria:")
+    for i, entrada in enumerate(anos_disponiveis, start=1):
+        print(f"    ({i}) {entrada['ano']}")
 
-    print(f"({ultimo + 1}) Todos os anos")
-    print("(0) Voltar")
+    ultimo = len(anos_disponiveis)
+    print(f"    ({ultimo + 1}) Todos os anos desta categoria")
+    print(f"    (0) Voltar")
 
     while True:
-
-        escolha = input("\nEscolha uma opção: ").strip()
+        escolha = input("\n  Escolha o ano: ").strip()
 
         if escolha == "0":
             return None
 
         if escolha.isdigit():
-
-            escolha = int(escolha)
-
-            if 1 <= escolha <= ultimo:
-                return anos[escolha - 1]
-
-            if escolha == ultimo + 1:
+            idx = int(escolha)
+            if 1 <= idx <= ultimo:
+                return anos_disponiveis[idx - 1]
+            if idx == ultimo + 1:
                 return {"todos": True}
 
-        print("Opção inválida.")
+        print("  Opção inválida. Digite um número da lista acima.")
 
 
-def processar_categoria(categoria):
+def processar_categoria(categoria: dict) -> None:
+    """Orquestra a busca e exibição de editais de uma categoria."""
+    print(f"\n  Buscando anos disponíveis em '{categoria['nome']}'...")
 
-    print(f"\nBuscando anos de {categoria['nome']}...")
-
-    anos = buscar_anos_categoria(categoria["url"])
-
+    anos = buscar_anos_da_categoria(categoria["url"])
     if not anos:
-        print("Nenhum ano encontrado.")
+        print("  Nenhum ano encontrado para esta categoria.")
         return
 
     escolha = selecionar_ano(anos)
-
     if escolha is None:
         return
 
-    # buscar todos os anos
     if escolha.get("todos"):
-
         todos_editais = []
-
-        for ano in anos:
-
-            print(f"\nBuscando editais de {ano['ano']}...")
-
-            editais = buscar_editais_ano(ano["url"])
-
-            todos_editais.extend(editais)
-
-        mostrar_editais(
-            todos_editais,
-            f"Todos os editais - {categoria['nome']}"
-        )
-
+        for entrada in anos:
+            print(f"  → Buscando editais de {entrada['ano']}...")
+            todos_editais.extend(buscar_editais_de_ano(entrada["url"]))
+        exibir_editais(todos_editais, f"Todos os editais – {categoria['nome']}")
         return
 
-    # buscar ano específico
-    print(f"\nBuscando editais de {escolha['ano']}...")
-
-    editais = buscar_editais_ano(escolha["url"])
-
-    mostrar_editais(
-        editais,
-        f"{categoria['nome']} - {escolha['ano']}"
-    )
+    print(f"  → Buscando editais de {escolha['ano']}...")
+    editais = buscar_editais_de_ano(escolha["url"])
+    exibir_editais(editais, f"{categoria['nome']} – {escolha['ano']}")
 
 
-def mostrar_menu():
+# ──────────────────────────────────────────────
+# Ponto de entrada
+# ──────────────────────────────────────────────
 
-    print("\n" + "=" * 80)
-    print("EDITAIS IFPB - CAMPUS CAJAZEIRAS")
-    print("=" * 80)
-
-    print("(0) Sair")
-
-    for chave, categoria in categorias.items():
-        print(f"({chave}) {categoria['nome']}")
-
-    print("(T) Todos os editais recentes")
-
-    print("-" * 80)
-
-
-def main():
-
-    print("\nBem-vindo ao sistema de consulta de editais do IFPB.\n")
+def main() -> None:
+    print("\nBem-vindo ao consultor de editais do IFPB Campus Cajazeiras!")
 
     while True:
-
-        mostrar_menu()
-
-        opcao = input("Escolha uma opção: ").strip()
+        exibir_menu_principal()
+        opcao = input("  Escolha uma opção: ").strip()
 
         if opcao == "0":
-
-            print("\nPrograma encerrado.\n")
-
+            print("\n  Encerrando. Até logo!\n")
             break
 
         if opcao.upper() == "T":
-
-            print("\nBuscando editais recentes...")
-
-            editais = buscar_editais_recentes()
-
-            mostrar_editais(
-                editais,
-                "Editais recentes"
-            )
-
+            print("\n  Buscando editais recentes da página principal...")
+            editais = buscar_editais_recentes_principal()
+            exibir_editais(editais, "Editais mais recentes (página principal)")
             continue
 
-        if opcao not in categorias:
-
-            print("\nOpção inválida.")
-
+        if opcao not in CATEGORIAS:
+            print("\n  Opção inválida. Digite um número entre 0 e 6, ou T.")
             continue
 
-        processar_categoria(categorias[opcao])
+        processar_categoria(CATEGORIAS[opcao])
 
 
 if __name__ == "__main__":
